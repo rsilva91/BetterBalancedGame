@@ -508,6 +508,81 @@ function OnSpyMissionCompleted(iPlayerID, iMissionID)
 	kParameters["iMissionID"] = iMissionID
 	UI.RequestPlayerOperation(Game.GetLocalPlayer(), PlayerOperations.EXECUTE_SCRIPT, kParameters)
 end
+--Religion (and Mvemba) 5.4
+function OnReligionFounded(iPlayerID, iReligionID)
+	print("OnReligionFounded: Called")
+	local kParameters = {}
+	kParameters.OnStart = "GameplayReligionFounded"
+	kParameters["iPlayerID"] = iPlayerID
+	kParameters["iReligionID"] = iReligionID
+	UI.RequestPlayerOperation(iPlayerID, PlayerOperations.EXECUTE_SCRIPT, kParameters);
+end
+
+function OnBeliefAdded(iPlayerID, iBeliefID)
+	print("OnBeliefAdded: Called")
+	local kParameters = {}
+	kParameters.OnStart = "GameplayBeliefAdded"
+	kParameters["iPlayerID"] = iPlayerID
+	kParameters["iBeliefID"] = iBeliefID
+	UI.RequestPlayerOperation(iPlayerID, PlayerOperations.EXECUTE_SCRIPT, kParameters);
+end
+
+function OnMvembaCityReligionChanged(iPlayerID, iCityID, iUnknown1, iUnknown2)
+	print("OnMvembaCityReligionChanged: Called")
+	if PlayerConfigurations[iPlayerID]:GetLeaderTypeName ~= "LEADER_MVEMBA" then
+		return
+	end
+	local kParameters = {}
+	kParameters.OnStart = "GameplayMvembaCityReligionChanged"
+	kParameters["iPlayerID"] = iPlayerID
+	kParameters["iCityID"] = iCityID
+	kParameters["iUnknown1"] = iUnknown1
+	kParameters["iUnknown2"] = iUnknown2
+	UI.RequestPlayerOperation(iPlayerID, PlayerOperations.EXECUTE_SCRIPT, kParameters);
+end
+
+function OnMvembaCityAddedToMap(iPlayerID, iCityID, iX, iY)
+	print("OnMvembaCityAddedToMap: Called")
+	if PlayerConfigurations[iPlayerID]:GetLeaderTypeName ~= "LEADER_MVEMBA" then
+		return
+	end
+	local kParameters = {}
+	kParameters.OnStart = "GameplayMvembaCityAddedToMap"
+	kParameters["iPlayerID"] = iPlayerID
+	kParameters["iCityID"] = iCityID
+	kParameters["iX"] = iX
+	kParameters["iY"] = iY
+	UI.RequestPlayerOperation(iPlayerID, PlayerOperations.EXECUTE_SCRIPT, kParameters);
+end
+
+function OnMvembaCityRemovedFromMap(iPlayerID, iCityID)
+	print("OnMvembaCityRemovedFromMap: Called")
+	if PlayerConfigurations[iPlayerID]:GetLeaderTypeName ~= "LEADER_MVEMBA" then
+		return
+	end
+	local kParameters = {}
+	kParameters.OnStart = "GameplayMvembaCityRemovedFromMap"
+	kParameters["iPlayerID"] = iPlayerID
+	kParameters["iCityID"] = iCityID
+	UI.RequestPlayerOperation(iPlayerID, PlayerOperations.EXECUTE_SCRIPT, kParameters);
+end
+
+function OnMvembaCityTransfered(iNewOwnerID, iCityID, iOldOwnerID, nTransferType)
+	print("OnMvembaCityRemovedFromMap: Called")
+	if PlayerConfigurations[iNewOwnerID]:GetLeaderTypeName == "LEADER_MVEMBA" then
+		local kParameters = {}
+		kParameters.OnStart = "GameplayMvembaTakeGiftCity"
+		kParameters["iPlayerID"] = iNewOwnerID
+		kParameters["iCityID"] = iCityID
+		UI.RequestPlayerOperation(iNewOwnerID, PlayerOperations.EXECUTE_SCRIPT, kParameters);
+	elseif PlayerConfigurations[iOldOwnerID]:GetLeaderTypeName == "LEADER_MVEMBA" then
+		local kParameters = {}
+		kParameters.OnStart = "GameplayMvembaGiveGiftCity"
+		kParameters["iPlayerID"] = iNewOwnerID
+		kParameters["iCityID"] = iCityID
+		UI.RequestPlayerOperation(iNewOwnerID, PlayerOperations.EXECUTE_SCRIPT, kParameters);
+	end
+end
 --Support
 function GetAppointedGovernor(playerID:number, governorTypeIndex:number)
 	-- Make sure we're looking for a valid governor
@@ -628,6 +703,9 @@ function Initialize()
 	--5.2. Disable: print("Delete Suntzu UI Hook added")
 	Events.SpyMissionCompleted.Add(OnSpyMissionCompleted)
 	print("Spy Capture Capacity UI hook added")
+	--5.4 Change Religion Mechanism
+	Events.ReligionFounded.Add(OnReligionFounded)
+	Events.BeliefAdded.Add(OnBeliefAdded)
 	local tMajorIDs = PlayerManager.GetAliveMajorIDs()
 	for i, iPlayerID in ipairs(tMajorIDs) do
 		if PlayerConfigurations[iPlayerID]:GetLeaderTypeName() == "LEADER_QIN_ALT" then
@@ -642,6 +720,11 @@ function Initialize()
 			Events.BuildingAddedToMap.Add(OnLudwigWonderPlaced)
 			Events.BuildingRemovedFromMap.Add(OnLudwigWonderRemoved)
 			Events.WonderCompleted.Add(OnLudwigWonderCompleted)
+		elseif PlayerConfigurations[iPlayerID]:GetLeaderTypeName ~= "LEADER_MVEMBA" then
+			Events.CityReligionChanged.Add(OnMvembaCityReligionChanged)
+			Events.CityAddedToMap.Add(OnMvembaCityAddedToMap)
+			Events.CityRemovedFromMap.Add(OnMvembaCityRemovedFromMap)
+			Events.CityTransfered.Add(OnMvembaCityTransfered)
 		end
 	end
 	--BCY no rng setting (param names are still called BBCC)

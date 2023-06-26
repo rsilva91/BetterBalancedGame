@@ -2505,8 +2505,26 @@ function OnGameplaySpyMissionCompleted(iPlayerID, kParameters)
 		--Debug("Spy Capacity added to iPlayerID "..tostring(iPlayerID), "OnGameplaySpyMissionCompleted")
 	end
 end
-
-
+-- ===========================================================================
+-- Religion
+-- ===========================================================================
+function OnGameplayReligionFounded(iPlayerID, kParameters)
+end
+function OnGameplayBeliefAdded(iPlayerID, kParameters)
+end
+-- ===========================================================================
+-- Mvemba
+-- ===========================================================================
+function OnGameplayMvembaCityReligionChanged(iPlayerID, kParameters)
+end
+function OnGameplayMvembaCityAddedToMap(iPlayerID, kParameters)
+end
+function OnGameplayMvembaCityRemovedFromMap(iPlayerID, kParameters)
+end
+function OnGameplayMvembaTakeGiftCity(iPlayerID, kParameters)
+end
+function OnGameplayMvembaGiveGiftCity(iPlayerID, kParameters)
+end
 -- ===========================================================================
 --	Tools
 -- ===========================================================================
@@ -3882,6 +3900,10 @@ function Initialize()
 	print("BBG Amani Gameplay hooks added")
 	GameEvents.GameplaySpyMissionCompleted.Add(OnGameplaySpyMissionCompleted)
 	print("BBG Spy Capture Capacity Gameplay Hook Added")
+	--Religion
+	GameEvents.GameplayReligionFounded.Add(OnGameplayReligionFounded)
+	GameEvents.GameplayBeliefAdded.Add(OnGameplayBeliefAdded)
+	print("BBG General Religion Hooks Added")
 	--Delete Suntzu for not-Unifier
 	--LuaEvents.UINotUnifierDeleteSunTzu.Add(OnUINotUnifierDeleteSunTzu)
 	--5.2. Disable: GameEvents.GameplayNotUnifierDeleteSunTzu.Add(OnGameplayNotUnifierDeleteSunTzu)
@@ -3944,6 +3966,13 @@ function Initialize()
 			--5.2. Disable: GameEvents.GameplayUnifierSamePlayerUniqueEffect.Add(OnGameplayUnifierSamePlayerUniqueEffect)
 			--5.2. Disable: GameEvents.GameplayUnifierTrackRelevantGenerals.Add(OnGameplayUnifierTrackRelevantGenerals)
 			--5.2. Disable: print("BBG Unifier Hooks Added")
+		elseif PlayerConfigurations[iPlayerID]:GetLeaderTypeName == "LEADER_MVEMBA" then
+			GameEvents.GameplayMvembaCityReligionChanged.Add(OnGameplayMvembaCityReligionChanged)
+			GameEvents.GameplayMvembaCityAddedToMap.Add(OnGameplayMvembaCityAddedToMap)
+			GameEvents.GameplayMvembaCityRemovedFromMap.Add(OnGameplayMvembaCityRemovedFromMap)
+			GameEvents.GameplayMvembaTakeGiftCity.Add(OnGameplayMvembaTakeGiftCity)
+			GameEvents.GameplayMvembaGiveGiftCity.Add(OnGameplayMvembaGiveGiftCity)
+			print("Mvemba religious hooks added")
 		end
 	end
 	if BBCC_MODE ~= -1 then

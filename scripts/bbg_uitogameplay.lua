@@ -554,7 +554,7 @@ end
 
 function OnMvembaCityReligionChanged(iPlayerID, iCityID, iUnknown1, iUnknown2)
 	print("OnMvembaCityReligionChanged: Called")
-	if PlayerConfigurations[iPlayerID]:GetLeaderTypeName ~= "LEADER_MVEMBA" then
+	if PlayerConfigurations[iPlayerID]:GetLeaderTypeName() ~= "LEADER_MVEMBA" then
 		return
 	end
 	local kParameters = {}
@@ -568,7 +568,7 @@ end
 
 function OnMvembaCityAddedToMap(iPlayerID, iCityID, iX, iY)
 	print("OnMvembaCityAddedToMap: Called")
-	if PlayerConfigurations[iPlayerID]:GetLeaderTypeName ~= "LEADER_MVEMBA" then
+	if PlayerConfigurations[iPlayerID]:GetLeaderTypeName()~= "LEADER_MVEMBA" then
 		return
 	end
 	local kParameters = {}
@@ -582,7 +582,7 @@ end
 
 function OnMvembaCityRemovedFromMap(iPlayerID, iCityID)
 	print("OnMvembaCityRemovedFromMap: Called")
-	if PlayerConfigurations[iPlayerID]:GetLeaderTypeName ~= "LEADER_MVEMBA" then
+	if PlayerConfigurations[iPlayerID]:GetLeaderTypeName() ~= "LEADER_MVEMBA" then
 		return
 	end
 	local kParameters = {}
@@ -594,7 +594,7 @@ end
 
 function OnMvembaCityTransfered(iNewOwnerID, iCityID, iOldOwnerID, nTransferType)
 	print("OnMvembaCityRemovedFromMap: Called")
-	if PlayerConfigurations[iNewOwnerID]:GetLeaderTypeName ~= "LEADER_MVEMBA" and PlayerConfigurations[iOldOwnerID]:GetLeaderTypeName == "LEADER_MVEMBA" then
+	if PlayerConfigurations[iNewOwnerID]:GetLeaderTypeName() ~= "LEADER_MVEMBA" and PlayerConfigurations[iOldOwnerID]:GetLeaderTypeName() == "LEADER_MVEMBA" then
 		return
 	end
 	local kParameters = {}
@@ -743,7 +743,7 @@ function Initialize()
 			Events.BuildingAddedToMap.Add(OnLudwigWonderPlaced)
 			Events.BuildingRemovedFromMap.Add(OnLudwigWonderRemoved)
 			Events.WonderCompleted.Add(OnLudwigWonderCompleted)
-		elseif PlayerConfigurations[iPlayerID]:GetLeaderTypeName ~= "LEADER_MVEMBA" then
+		elseif PlayerConfigurations[iPlayerID]:GetLeaderTypeName() ~= "LEADER_MVEMBA" then
 			Events.CityReligionChanged.Add(OnMvembaCityReligionChanged)
 			Events.CityAddedToMap.Add(OnMvembaCityAddedToMap)
 			Events.CityRemovedFromMap.Add(OnMvembaCityRemovedFromMap)

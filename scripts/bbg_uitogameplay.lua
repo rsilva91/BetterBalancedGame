@@ -527,6 +527,31 @@ function OnBeliefAdded(iPlayerID, iBeliefID)
 	UI.RequestPlayerOperation(iPlayerID, PlayerOperations.EXECUTE_SCRIPT, kParameters);
 end
 
+function OnCapitalCityChanged(iPlayerID, iCityID)
+	print("OnCapitalCityChanged: Called")
+	local pPlayer = Players[iPlayerID]
+	if pPlayer==nil then
+		return
+	end
+	local pCity = CityManager.GetCity(iPlayerID, iCityID)
+	if pCity == nil then
+		return
+	end
+	local kParameters = {}
+	kParameters.OnStart = "GameplayCapitalCityChanged"
+	kParameters["iPlayerID"] = iPlayerID
+	kParameters["iCityID"] = iCityID
+	UI.RequestPlayerOperation(iPlayerID, PlayerOperations.EXECUTE_SCRIPT, kParameters);
+end
+
+function OnPlayerDefeat(iPlayerID, iDefeatID, iEventID)
+	print("OnPlayerDefeat: Called for iPlayerID", iPlayerID)
+	local kParameters = {}
+	kParameters.OnStart = "GameplayPlayerDefeat"
+	kParameters["iPlayerID"] = iPlayerID
+	UI.RequestPlayerOperation(iPlayerID, PlayerOperations.EXECUTE_SCRIPT, kParameters);
+end
+
 function OnMvembaCityReligionChanged(iPlayerID, iCityID, iUnknown1, iUnknown2)
 	print("OnMvembaCityReligionChanged: Called")
 	if PlayerConfigurations[iPlayerID]:GetLeaderTypeName ~= "LEADER_MVEMBA" then
@@ -569,19 +594,15 @@ end
 
 function OnMvembaCityTransfered(iNewOwnerID, iCityID, iOldOwnerID, nTransferType)
 	print("OnMvembaCityRemovedFromMap: Called")
-	if PlayerConfigurations[iNewOwnerID]:GetLeaderTypeName == "LEADER_MVEMBA" then
-		local kParameters = {}
-		kParameters.OnStart = "GameplayMvembaTakeGiftCity"
-		kParameters["iPlayerID"] = iNewOwnerID
-		kParameters["iCityID"] = iCityID
-		UI.RequestPlayerOperation(iNewOwnerID, PlayerOperations.EXECUTE_SCRIPT, kParameters);
-	elseif PlayerConfigurations[iOldOwnerID]:GetLeaderTypeName == "LEADER_MVEMBA" then
-		local kParameters = {}
-		kParameters.OnStart = "GameplayMvembaGiveGiftCity"
-		kParameters["iPlayerID"] = iNewOwnerID
-		kParameters["iCityID"] = iCityID
-		UI.RequestPlayerOperation(iNewOwnerID, PlayerOperations.EXECUTE_SCRIPT, kParameters);
+	if PlayerConfigurations[iNewOwnerID]:GetLeaderTypeName ~= "LEADER_MVEMBA" and PlayerConfigurations[iOldOwnerID]:GetLeaderTypeName == "LEADER_MVEMBA" then
+		return
 	end
+	local kParameters = {}
+	kParameters.OnStart = "GameplayMvembaGiftCity"
+	kParameters["iNewOwnerID"] = iNewOwnerID
+	kParameters["iOldOwnerID"] = iOldOwnerID
+	kParameters["iCityID"] = iCityID
+	UI.RequestPlayerOperation(iNewOwnerID, PlayerOperations.EXECUTE_SCRIPT, kParameters);
 end
 --Support
 function GetAppointedGovernor(playerID:number, governorTypeIndex:number)
@@ -706,6 +727,8 @@ function Initialize()
 	--5.4 Change Religion Mechanism
 	Events.ReligionFounded.Add(OnReligionFounded)
 	Events.BeliefAdded.Add(OnBeliefAdded)
+	Events.CapitalCityChanged.Add(OnCapitalCityChanged)
+	Events.PlayerDefeat.Add(OnPlayerDefeat)
 	local tMajorIDs = PlayerManager.GetAliveMajorIDs()
 	for i, iPlayerID in ipairs(tMajorIDs) do
 		if PlayerConfigurations[iPlayerID]:GetLeaderTypeName() == "LEADER_QIN_ALT" then

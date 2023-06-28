@@ -509,6 +509,7 @@ function OnSpyMissionCompleted(iPlayerID, iMissionID)
 	UI.RequestPlayerOperation(Game.GetLocalPlayer(), PlayerOperations.EXECUTE_SCRIPT, kParameters)
 end
 --Religion (and Mvemba) 5.4
+--religion hooks
 function OnReligionFounded(iPlayerID, iReligionID)
 	print("OnReligionFounded: Called")
 	local kParameters = {}
@@ -551,7 +552,7 @@ function OnPlayerDefeat(iPlayerID, iDefeatID, iEventID)
 	kParameters["iPlayerID"] = iPlayerID
 	UI.RequestPlayerOperation(iPlayerID, PlayerOperations.EXECUTE_SCRIPT, kParameters);
 end
-
+--mvemba exclusive hooks
 function OnMvembaCityReligionChanged(iPlayerID, iCityID, iUnknown1, iUnknown2)
 	print("OnMvembaCityReligionChanged: Called")
 	if PlayerConfigurations[iPlayerID]:GetLeaderTypeName() ~= "LEADER_MVEMBA" then
@@ -604,6 +605,61 @@ function OnMvembaCityTransfered(iNewOwnerID, iCityID, iOldOwnerID, nTransferType
 	kParameters["iCityID"] = iCityID
 	UI.RequestPlayerOperation(iNewOwnerID, PlayerOperations.EXECUTE_SCRIPT, kParameters);
 end
+--exodus
+function OnDedicationChosen(iPlayerID : number, iOperationID : number)
+	print("OnDedicationChosen: Called")
+	if iOperationID ~= PlayerOperations.COMMEMORATE then
+		return
+	end
+	local iLocPlayerID = Game.GetLocalPlayer()
+	local iHostPlayerID = 0
+	if GameConfiguration.IsAnyMultiplayer() then
+		iHostPlayerID = Network.GetGameHostPlayerID()
+	end
+	if iPlayerID ~= iLocPlayerID and Players[iPlayerID]:IsHuman() then
+		return
+	end
+	if Players[iPlayerID]:IsHuman() == false and iLocPlayerID ~= iHostPlayerID then
+		return
+	end
+	local pGameEras = Game.GetEras()
+	local tCommemorations =  pGameEras:GetPlayerActiveCommemorations(iPlayerID)
+	if #tCommemorations == 0 or tCommemorations == {} or tCommemorations == nil then
+		return
+	end
+	print("OnDedicationChosen: Dedications Detected")
+	for i, iCommemorationID in ipairs(tCommemorations) do
+		if iCommemorationID == 3 then
+			if pGameEras:HasHeroicGoldenAge(iPlayerID) or pGameEras:HasGoldenAge(iPlayerID) then
+				print("OnDedicationChosen: Golden Exodus Detected")
+				local kParameters = {}
+				kParameters.OnStart = "GameplayExodusSetProperty"
+				kParameters["iPlayerID"] = iPlayerID
+				UI.RequestPlayerOperation(iLocPlayerID, PlayerOperations.EXECUTE_SCRIPT, kParameters);
+			end
+		end
+	end
+end
+
+function OnGameEraChanged(iPrevEraID, iNewEraID)
+	print("OnGameEraChanged: Called some blah blah")
+	local iHostPlayerID = 0
+	local iLocPlayerID = Game.GetLocalPlayer()
+	if GameConfiguration.IsAnyMultiplayer() then
+		iHostPlayerID = Network.GetGameHostPlayerID()
+	end
+	if iLocPlayerID ~= iHostPlayerID then
+		return print("OnGameEraChanged: Returns")
+	end
+	print("Sending Raise Event")
+	local kParameters = {}
+	kParameters.OnStart = "GameplayRemoveExodus"
+	kParameters["iPlayerID"] = iLocPlayerID
+	print("kParameters calculated = > sending")
+	UI.RequestPlayerOperation(Game.GetLocalPlayer(), PlayerOperations.EXECUTE_SCRIPT, kParameters)
+	print("Removed?")
+end
+
 --Support
 function GetAppointedGovernor(playerID:number, governorTypeIndex:number)
 	-- Make sure we're looking for a valid governor
@@ -729,6 +785,9 @@ function Initialize()
 	Events.BeliefAdded.Add(OnBeliefAdded)
 	Events.CapitalCityChanged.Add(OnCapitalCityChanged)
 	Events.PlayerDefeat.Add(OnPlayerDefeat)
+	--5.4 Exodus
+	Events.PlayerOperationComplete.Add(OnDedicationChosen)
+	Events.GameEraChanged.Add(OnGameEraChanged)
 	local tMajorIDs = PlayerManager.GetAliveMajorIDs()
 	for i, iPlayerID in ipairs(tMajorIDs) do
 		if PlayerConfigurations[iPlayerID]:GetLeaderTypeName() == "LEADER_QIN_ALT" then

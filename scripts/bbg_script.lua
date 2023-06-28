@@ -2670,6 +2670,13 @@ function OnGameplayCapitalCityChanged(iPlayerID, kParameters)
 		pNewCapPlot:SetProperty("FOUNDER_OF_"..tostring(GameInfo.Beliefs[tBeliefData[c_BeliefClass[4]]].BeliefType), 1)
 		print("Enhancer Property Transfered on iPlayerID from iOldCap to iCityID", iPlayerID, iOldCap, iCityID,"plot from iX, iY", iOldX, iOldY, "to iX, iY", iNewX, iNewY, "for Belief", tostring(GameInfo.Beliefs[tBeliefData[c_BeliefClass[4]]].BeliefType))
 	end
+	local pOldCapPlot = Map.GetPlot(iOldX, iOldY)
+	if pOldCapPlot:GetProperty("EXODUS_ON") == 1 then
+		pOldCapPlot:SetProperty("EXODUS_ON", nil)
+		local pNewCapPlot = Map.GetPlot(iNewX, iNewY)
+		pNewCapPlot:SetProperty("EXODUS_ON", 1)
+		print("Exodus transfered to the new cap")
+	end
 end
 
 function OnGameplayPlayerDefeat(iPlayerID, kParameters)
@@ -2725,6 +2732,9 @@ function OnGameplayPlayerDefeat(iPlayerID, kParameters)
 		pPlotOldCap:SetProperty("FOUNDER_OF_"..tostring(GameInfo.Beliefs[tBeliefData[c_BeliefClass[4]]].BeliefType), nil)
 		print("Enhancer Property Transfered on iPlayerID from iOldCap to iCityID", iPlayerID, iOldCap, iCityID, "for Belief", tostring(GameInfo.Beliefs[tBeliefData[c_BeliefClass[4]]].BeliefType))
 	end
+	--nil exodus if player died
+	local pPlotOldCap = Map.GetPlot(iOldX, iOldY)
+	pPlotOldCap("EXODUS_ON", nil)
 end
 function UpdateBeliefRow(tRow, iBeliefID)
 	print("UpdateBeliefRow: Called change")
@@ -2859,6 +2869,41 @@ function CalculeBeliefs(iReligionID)
 	return tBeliefs
 end
 
+-- ===========================================================================
+-- Exodus
+-- ===========================================================================
+function OnGameplayExodusSetProperty(iPlayerID, kParameters)
+	print("OnGameplayExodusSetProperty: Called")
+	local iPlayerID = kParameters["iPlayerID"]
+	local tCapitals = Game:GetProperty("P_CAPITALS")
+	if tCapitals[iPlayerID] == nil then
+		return
+	end
+	local iX = tCapitals[iPlayerID]["iX"]
+	local iY = tCapitals[iPlayerID]["iY"]
+	if iX ~= -9999 and iY ~= -9999 then
+		local pCapCityPlot = Map.GetPlot(iX, iY)
+		pCapCityPlot:SetProperty("EXODUS_ON", 1)
+		print("OnGameplayExodusSetProperty: Exodus Property Set for iX, iY", iX, iY)
+	end
+end
+
+function OnGameplayRemoveExodus(iPlayerID, kParameters)
+	print("OnGameplayRemoveExodus: started by iPlayerID", iPlayerID)
+	local tCapitals = Game:GetProperty("P_CAPITALS")
+	if tCapitals==nil then
+		return
+	end
+	for i, tRow in ipairs(tCapitals) do
+		local iX = tRow["iX"]
+		local iY = tRow["iY"]
+		if iX ~= -9999 and iY ~= -9999 then
+			local pCapCityPlot = Map.GetPlot(iX, iY)
+			pCapCityPlot:SetProperty("EXODUS_ON", nil)
+			print("Exodus nilled for iPlayerID", i)
+		end
+	end
+end
 -- ===========================================================================
 --	Tools
 -- ===========================================================================
@@ -4241,6 +4286,11 @@ function Initialize()
 	GameEvents.GameplayBeliefAdded.Add(OnGameplayBeliefAdded)
 	GameEvents.GameplayCapitalCityChanged.Add(OnGameplayCapitalCityChanged)
 	GameEvents.GameplayPlayerDefeat.Add(OnGameplayPlayerDefeat)
+	GameEvents.GameplayExodusSetProperty.Add(OnGameplayExodusSetProperty)
+	print("Adding Remove Exodus")
+	GameEvents.GameplayRemoveExodus.Add(OnGameplayRemoveExodus)
+	print(OnGameplayRemoveExodus)
+	print(GameEvents.GameplayRemoveExodus.Count())
 	print("BBG General Religion Hooks Added")
 	--Delete Suntzu for not-Unifier
 	--LuaEvents.UINotUnifierDeleteSunTzu.Add(OnUINotUnifierDeleteSunTzu)
